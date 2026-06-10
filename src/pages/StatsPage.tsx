@@ -25,10 +25,6 @@ export function StatsPage() {
       })
       setStats(data)
       setMessage({ type: 'success', text: '统计查询成功' })
-      setQuery({
-        start: '',
-        end: '',
-      })
     })
   }
 

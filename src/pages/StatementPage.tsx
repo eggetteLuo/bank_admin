@@ -37,11 +37,6 @@ export function StatementPage() {
       })
       setRecords(data)
       setMessage({ type: 'success', text: `已获取 ${data.length} 条对账记录` })
-      setQuery((value) => ({
-        ...value,
-        start: '',
-        end: '',
-      }))
     })
   }
 
