@@ -32,7 +32,12 @@ export function BalancePage() {
           onChange={(e) => setCardNo(e.target.value)}
           className={baseInputClass}
         />
-        <PrimaryButton type="submit" loading={loading} loadingText="查询中..." className="w-full sm:w-auto">
+        <PrimaryButton
+          type="submit"
+          loading={loading}
+          loadingText="查询中..."
+          className="w-full whitespace-nowrap sm:w-28 sm:shrink-0"
+        >
           查询
         </PrimaryButton>
       </form>

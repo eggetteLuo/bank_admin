@@ -23,6 +23,11 @@ export function WithdrawPage() {
         remark: form.remark,
       })
       setMessage({ type: 'success', text: `${data.message}（流水号：${data.tradeId}）` })
+      setForm((value) => ({
+        ...value,
+        amount: '',
+        remark: '',
+      }))
     })
   }
 

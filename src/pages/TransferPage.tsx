@@ -25,6 +25,12 @@ export function TransferPage() {
         remark: form.remark,
       })
       setMessage({ type: 'success', text: data.message })
+      setForm((value) => ({
+        ...value,
+        toCardNo: '',
+        amount: '',
+        remark: '',
+      }))
     })
   }
 

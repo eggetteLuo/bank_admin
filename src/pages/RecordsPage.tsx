@@ -33,6 +33,11 @@ export function RecordsPage() {
       const data = await bankApi.getRecords(query)
       setRecords(data)
       setMessage({ type: 'success', text: `已获取 ${data.length} 条流水` })
+      setQuery((value) => ({
+        ...value,
+        page: '',
+        size: '',
+      }))
     })
   }
 

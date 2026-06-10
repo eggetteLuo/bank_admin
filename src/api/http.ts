@@ -2,7 +2,7 @@ import axios from 'axios'
 import type { AxiosError, InternalAxiosRequestConfig } from 'axios'
 import { authStore } from './auth'
 
-export const API_BASE = 'http://localhost:8080/api'
+export const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080/api'
 
 /**
  * 项目统一 axios 实例：集中处理 baseURL、Authorization 和错误消息。

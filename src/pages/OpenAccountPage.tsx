@@ -1,9 +1,10 @@
 import type { FormEvent } from 'react'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { FeaturePageLayout } from '../components/FeaturePageLayout'
 import { Field, PrimaryButton, baseInputClass } from '../components/ui'
 import { useApiAction } from '../hooks/useApiAction'
 import { bankApi } from '../api/bank'
+import { addressOptions } from '../lib/addressOptions'
 import type { OpenAccountResponse } from '../types/bank'
 
 export function OpenAccountPage() {
@@ -18,9 +19,36 @@ export function OpenAccountPage() {
     depositId: '1',
   })
   const [result, setResult] = useState<OpenAccountResponse | null>(null)
+  const [isAddressPickerOpen, setIsAddressPickerOpen] = useState(false)
+  const [selectedProvinceName, setSelectedProvinceName] = useState(addressOptions[0].name)
+  const [selectedCityName, setSelectedCityName] = useState(addressOptions[0].cities[0].name)
+  const addressPickerRef = useRef<HTMLDivElement | null>(null)
+
+  const selectedProvince =
+    addressOptions.find((province) => province.name === selectedProvinceName) ?? addressOptions[0]
+  const selectedCity =
+    selectedProvince.cities.find((city) => city.name === selectedCityName) ?? selectedProvince.cities[0]
+
+  useEffect(() => {
+    if (!isAddressPickerOpen) return undefined
+
+    const closeOnOutsideClick = (event: MouseEvent): void => {
+      if (!addressPickerRef.current?.contains(event.target as Node)) {
+        setIsAddressPickerOpen(false)
+      }
+    }
+
+    window.addEventListener('mousedown', closeOnOutsideClick)
+    return () => window.removeEventListener('mousedown', closeOnOutsideClick)
+  }, [isAddressPickerOpen])
 
   const handleSubmit = async (event: FormEvent): Promise<void> => {
     event.preventDefault()
+
+    if (!form.address.trim()) {
+      setMessage({ type: 'error', text: '请选择开户地址' })
+      return
+    }
 
     await runAction(async () => {
       const data = await bankApi.openAccount({
@@ -34,6 +62,15 @@ export function OpenAccountPage() {
       })
       setResult(data)
       setMessage({ type: 'success', text: `开户成功，卡号：${data.cardNo}` })
+      setForm({
+        userName: '',
+        idCard: '',
+        phone: '',
+        address: '',
+        openAmount: '',
+        withdrawPassword: '',
+        depositId: '',
+      })
     })
   }
 
@@ -68,14 +105,78 @@ export function OpenAccountPage() {
             className={baseInputClass}
           />
         </Field>
-        <Field label="开户地址">
-          <input
-            required
-            value={form.address}
-            onChange={(e) => setForm((v) => ({ ...v, address: e.target.value }))}
-            className={baseInputClass}
-          />
-        </Field>
+        <div className="relative flex flex-col gap-2" ref={addressPickerRef}>
+          <span className="text-sm font-medium text-slate-700">开户地址</span>
+          <button
+            type="button"
+            onClick={() => setIsAddressPickerOpen((value) => !value)}
+            className={`${baseInputClass} flex items-center justify-between text-left ${
+              form.address ? '' : 'text-slate-400'
+            }`}
+          >
+            <span>{form.address || '请选择省 / 市 / 区'}</span>
+            <span className="ml-3 text-slate-400">展开</span>
+          </button>
+          {isAddressPickerOpen ? (
+            <div className="absolute left-0 right-0 top-full z-20 mt-2 max-h-96 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl ring-1 ring-slate-900/5">
+              <div className="grid max-h-96 min-h-0 grid-cols-3 divide-x divide-slate-100 text-sm">
+                <div className="max-h-96 min-h-0 overflow-y-auto overscroll-contain p-2">
+                  {addressOptions.map((province) => (
+                    <button
+                      type="button"
+                      key={province.name}
+                      onClick={() => {
+                        setSelectedProvinceName(province.name)
+                        setSelectedCityName(province.cities[0].name)
+                      }}
+                      className={`block w-full rounded-xl px-3 py-2 text-left transition ${
+                        province.name === selectedProvince.name
+                          ? 'bg-indigo-50 font-medium text-indigo-700'
+                          : 'text-slate-600 hover:bg-slate-50'
+                      }`}
+                    >
+                      {province.name}
+                    </button>
+                  ))}
+                </div>
+                <div className="max-h-96 min-h-0 overflow-y-auto overscroll-contain p-2">
+                  {selectedProvince.cities.map((city) => (
+                    <button
+                      type="button"
+                      key={city.name}
+                      onClick={() => setSelectedCityName(city.name)}
+                      className={`block w-full rounded-xl px-3 py-2 text-left transition ${
+                        city.name === selectedCity.name
+                          ? 'bg-indigo-50 font-medium text-indigo-700'
+                          : 'text-slate-600 hover:bg-slate-50'
+                      }`}
+                    >
+                      {city.name}
+                    </button>
+                  ))}
+                </div>
+                <div className="max-h-96 min-h-0 overflow-y-auto overscroll-contain p-2">
+                  {selectedCity.districts.map((district) => (
+                    <button
+                      type="button"
+                      key={district}
+                      onClick={() => {
+                        setForm((value) => ({
+                          ...value,
+                          address: `${selectedProvince.name} ${selectedCity.name} ${district}`,
+                        }))
+                        setIsAddressPickerOpen(false)
+                      }}
+                      className="block w-full rounded-xl px-3 py-2 text-left text-slate-600 transition hover:bg-indigo-50 hover:text-indigo-700"
+                    >
+                      {district}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ) : null}
+        </div>
         <Field label="开户金额">
           <input
             required
